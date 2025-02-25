@@ -140,25 +140,74 @@ function getWebviewContent(): string {
                     background: linear-gradient(135deg, #78ffd6, #a8ff78);
                     color: black;
                 }
-                #modifyStyleBtn {
-                    background: none;
-                    border: none;
-                    font-size: 14px;
-                    color: #bbb;
-                    cursor: pointer;
-                    text-decoration: underline;
-                    margin-top: 10px;
-                    transition: color 0.3s ease-in-out;
+                .settings {
+                    display: none;
+                    flex-direction: row;
+                    gap: 15px;
+                    margin-top: 15px;
+                    align-items: center;
+                    border-top: 1px solid #444;
+                    padding-top: 15px;
                 }
-                #modifyStyleBtn:hover {
-                    color: white;
+                .setting-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .setting-label {
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #ddd;
+                }
+                .custom-select {
+                    padding: 8px 15px;
+                    border-radius: 25px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    outline: none;
+                    transition: 0.3s ease-in-out;
+                    border: none;
+                    color: black;
+                    background: linear-gradient(135deg, #a8ff78, #78ffd6);
+                }
+                .custom-select:hover {
+                    background: linear-gradient(135deg, #78ffd6, #a8ff78);
+                    transform: scale(1.05);
                 }
             </style>
         </head>
         <body>
             <h2>Sovereign GPT</h2>
 
-            <button id="modifyStyleBtn">Modify Style</button>
+            <div class="settings" id="settings">
+                <div class="setting-group">
+                    <span class="setting-label">Font:</span>
+                    <select id="fontSelect" class="custom-select">
+                        <option value="Courier New">Courier New</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Monospace">Monospace</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <span class="setting-label">Font Size:</span>
+                    <select id="fontSizeSelect" class="custom-select">
+                        <option value="14px">14px</option>
+                        <option value="16px" selected>16px</option>
+                        <option value="18px">18px</option>
+                        <option value="20px">20px</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <span class="setting-label">Background:</span>
+                    <select id="bgSelect" class="custom-select">
+                        <option value="#282c34" selected>Dark</option>
+                        <option value="white">Light</option>
+                        <option value="#f4f4f4">Gray</option>
+                    </select>
+                </div>
+            </div>
 
             <textarea id="prompt" placeholder="Ask something..."></textarea><br />
 
@@ -197,15 +246,12 @@ function getWebviewContent(): string {
                     }
                 });
 
-                document.getElementById('modifyStyleBtn').addEventListener('click', () => {
-                    const settingsMenu = document.getElementById('settings');
-                    settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'flex' : 'none';
-                });
             </script>
         </body>
         </html>
     `;
 }
+
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
