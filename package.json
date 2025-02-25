@@ -3,19 +3,22 @@
   "displayName": "",
   "description": "deepseek R1 local",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aosnacz97/deepseek-offline"
+  },
   "engines": {
     "vscode": "^1.96.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "deepseek-offline.helloWorld",
-        "title": "Hello World"
+        "command": "deepseek-offline.start",
+        "title": "Start DeepSeek Chat"
       }
     ]
   },
@@ -39,6 +42,6 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "ollama": "^0.5.12"
+    "ollama": "^0.5.14"
   }
 }
