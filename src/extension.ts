@@ -19,15 +19,16 @@ export function activate(context: vscode.ExtensionContext) {
         panel.webview.onDidReceiveMessage(async (message: any) => {
             if (message.command === 'chat') {
                 const userPrompt = message.text;
+                const selectedModel = message.model || 'deepseek-r1:1.5b'; // Default model
                 let responseText = '';
-
+        
                 try {
                     const streamResponse = await ollama.chat({
-                        model: 'deepseek-r1:1.5b',
+                        model: selectedModel,
                         messages: [{ role: 'user', content: userPrompt }],
                         stream: true
                     });
-
+        
                     for await (const part of streamResponse) {
                         responseText += part.message.content;
                         panel.webview.postMessage({ command: 'chatResponse', text: responseText });
@@ -36,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
                     panel.webview.postMessage({ command: 'chatResponse', text: `Error: ${String(err)}` });
                 }
             }
-            });
+        });
         });
 
     context.subscriptions.push(disposable);
@@ -49,6 +50,8 @@ function getWebviewContent(): string {
         <head>
             <meta charset="UTF-8" />
             <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css">
             <style>
                 body {
                     font-family: sans-serif;
@@ -59,54 +62,83 @@ function getWebviewContent(): string {
                     flex-direction: column;
                     align-items: center;
                 }
-                textarea, #response {
+                textarea {
                     width: 100%;
                     max-width: 800px;
-                    box-sizing: border-box;
-                    padding: 10px;
-                    border-radius: 8px;
-                    margin-top: 10px;
-                    font-size: 16px;
-                }
-                textarea {
                     height: 80px;
                     background-color: #2c2f33;
                     color: white;
                     border: none;
+                    border-radius: 8px;
+                    padding: 10px;
+                    font-size: 16px;
+                    resize: none;
                 }
                 #response {
-                    border: 1px solid #444;
-                    min-height: 100px;
-                    white-space: pre-wrap;
+                    width: 100%;
+                    max-width: 800px;
+                    border-radius: 8px;
                     background-color: #282c34;
                     color: #abb2bf;
                     font-family: "Courier New", monospace;
                     padding: 15px;
+                    margin-top: 10px;
+                    overflow-x: auto;
+                    word-wrap: break-word;
                 }
                 pre {
                     background: #282c34;
-                    color: #abb2bf;
+                    color: #f8f8f2;
                     padding: 10px;
                     border-radius: 5px;
                     overflow-x: auto;
                 }
                 code {
                     font-family: "Courier New", monospace;
+                    background-color: #282c34;
+                    padding: 2px 5px;
+                    border-radius: 4px;
+                    color: #f8f8f2;
                 }
-                #askBtn {
-                    display: inline-block;
-                    background: linear-gradient(135deg, #a8ff78, #78ffd6);
-                    border: none;
-                    padding: 12px 24px;
+                .button-container {
+                    display: flex;
+                    justify-content: space-between;
+                    width: 100%;
+                    max-width: 800px;
+                    margin-top: 15px;
+                    gap: 10px;
+                }
+                .styled-button, .model-select {
+                    flex: 1;
+                    text-align: center;
+                    padding: 10px 20px;
                     font-size: 16px;
                     font-weight: bold;
                     border-radius: 25px;
                     cursor: pointer;
+                    border: none;
                     transition: 0.3s ease-in-out;
+                    background: linear-gradient(135deg, #a8ff78, #78ffd6);
+                    color: black;
                 }
-                #askBtn:hover {
+                .styled-button:hover, .model-select:hover {
                     background: linear-gradient(135deg, #78ffd6, #a8ff78);
                     transform: scale(1.05);
+                }
+                .model-select {
+                    appearance: none;
+                    text-align: center;
+                    cursor: pointer;
+                }
+                .model-select option {
+                    font-size: 14px;
+                    background: #1e1e1e;
+                    color: white;
+                    padding: 8px;
+                }
+                .model-select option:hover {
+                    background: linear-gradient(135deg, #78ffd6, #a8ff78);
+                    color: black;
                 }
                 #modifyStyleBtn {
                     background: none;
@@ -121,128 +153,53 @@ function getWebviewContent(): string {
                 #modifyStyleBtn:hover {
                     color: white;
                 }
-                .settings {
-                    display: none;
-                    flex-direction: row;
-                    gap: 15px;
-                    margin-top: 15px;
-                    align-items: center;
-                    border-top: 1px solid #444;
-                    padding-top: 15px;
-                }
-                .setting-group {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .setting-label {
-                    font-size: 14px;
-                    font-weight: bold;
-                    color: #ddd;
-                }
-                .custom-select {
-                    padding: 8px 15px;
-                    border-radius: 25px;
-                    font-size: 14px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    outline: none;
-                    transition: 0.3s ease-in-out;
-                    border: none;
-                    color: black;
-                    background: linear-gradient(135deg, #a8ff78, #78ffd6);
-                }
-                .custom-select:hover {
-                    background: linear-gradient(135deg, #78ffd6, #a8ff78);
-                    transform: scale(1.05);
-                }
-                .custom-select option {
-                    font-size: 14px;
-                    background: #1e1e1e;
-                    color: white;
-                    padding: 8px;
-                }
-                .custom-select option:hover,
-                .custom-select option:focus {
-                    background: linear-gradient(135deg, #78ffd6, #a8ff78);
-                    color: black;
-                }
             </style>
         </head>
         <body>
             <h2>Sovereign GPT</h2>
-            
+
             <button id="modifyStyleBtn">Modify Style</button>
-            <div class="settings" id="settings">
-                <div class="setting-group">
-                    <span class="setting-label">Font:</span>
-                    <select id="fontSelect" class="custom-select">
-                        <option value="Courier New">Courier New</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Verdana">Verdana</option>
-                        <option value="Monospace">Monospace</option>
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">Font Size:</span>
-                    <select id="fontSizeSelect" class="custom-select">
-                        <option value="14px">14px</option>
-                        <option value="16px" selected>16px</option>
-                        <option value="18px">18px</option>
-                        <option value="20px">20px</option>
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">Background:</span>
-                    <select id="bgSelect" class="custom-select">
-                        <option value="#282c34" selected>Dark</option>
-                        <option value="white">Light</option>
-                        <option value="#f4f4f4">Gray</option>
-                    </select>
-                </div>
-            </div>
 
             <textarea id="prompt" placeholder="Ask something..."></textarea><br />
-            <button id="askBtn">Ask</button>
+
+            <div class="button-container">
+                <select id="modelSelect" class="model-select">
+                    <option value="deepseek-r1:1.5b" selected>DeepSeek R1 (1.5B)</option>
+                    <option value="qwen2.5:1.5b">Qwen 2.5 (1.5B)</option>
+                    <option value="llama3.2:1b">LLaMA 3.2 (1B)</option>
+                </select>
+                <button id="askBtn" class="styled-button">Ask</button>
+            </div>
+
             <div id="response"></div>
+
             <script>
                 const vscode = acquireVsCodeApi();
 
                 document.getElementById('askBtn').addEventListener('click', () => {
                     const text = document.getElementById('prompt').value;
-                    vscode.postMessage({ command: 'chat', text });
+                    const selectedModel = document.getElementById('modelSelect').value;
+
+                    vscode.postMessage({
+                        command: 'chat',
+                        text: text,
+                        model: selectedModel
+                    });
                 });
 
                 window.addEventListener('message', event => {
                     const { command, text } = event.data;
                     if (command === 'chatResponse') {
                         document.getElementById('response').innerHTML = marked.parse(text);
+                        document.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
                     }
                 });
 
-                function applyStyles() {
-                    const font = document.getElementById('fontSelect').value;
-                    const fontSize = document.getElementById('fontSizeSelect').value;
-                    const bgColor = document.getElementById('bgSelect').value;
-
-                    document.getElementById('prompt').style.fontFamily = font;
-                    document.getElementById('prompt').style.fontSize = fontSize;
-                    document.getElementById('prompt').style.backgroundColor = bgColor;
-                    document.getElementById('prompt').style.color = bgColor === "white" ? "black" : "white";
-
-                    document.getElementById('response').style.fontFamily = font;
-                    document.getElementById('response').style.fontSize = fontSize;
-                    document.getElementById('response').style.backgroundColor = bgColor;
-                    document.getElementById('response').style.color = bgColor === "white" ? "black" : "#abb2bf";
-                }
-
-                document.getElementById('fontSelect').addEventListener('change', applyStyles);
-                document.getElementById('fontSizeSelect').addEventListener('change', applyStyles);
-                document.getElementById('bgSelect').addEventListener('change', applyStyles);
-
                 document.getElementById('modifyStyleBtn').addEventListener('click', () => {
                     const settingsMenu = document.getElementById('settings');
-                    settingsMenu.style.display = settingsMenu.style.display === 'flex' ? 'none' : 'flex';
+                    settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'flex' : 'none';
                 });
             </script>
         </body>
