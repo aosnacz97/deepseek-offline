@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
         panel.webview.onDidReceiveMessage(async (message: any) => {
             if (message.command === 'chat') {
                 const userPrompt = message.text;
-                const selectedModel = message.model || 'deepseek-r1:1.5b'; // Default model
+                const selectedModel = message.model || 'deepseek-r1:1.5b';
                 let responseText = '';
         
                 try {
@@ -179,35 +179,6 @@ function getWebviewContent(): string {
         </head>
         <body>
             <h2>Sovereign GPT</h2>
-
-            <div class="settings" id="settings">
-                <div class="setting-group">
-                    <span class="setting-label">Font:</span>
-                    <select id="fontSelect" class="custom-select">
-                        <option value="Courier New">Courier New</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Verdana">Verdana</option>
-                        <option value="Monospace">Monospace</option>
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">Font Size:</span>
-                    <select id="fontSizeSelect" class="custom-select">
-                        <option value="14px">14px</option>
-                        <option value="16px" selected>16px</option>
-                        <option value="18px">18px</option>
-                        <option value="20px">20px</option>
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">Background:</span>
-                    <select id="bgSelect" class="custom-select">
-                        <option value="#282c34" selected>Dark</option>
-                        <option value="white">Light</option>
-                        <option value="#f4f4f4">Gray</option>
-                    </select>
-                </div>
-            </div>
 
             <textarea id="prompt" placeholder="Ask something..."></textarea><br />
 
