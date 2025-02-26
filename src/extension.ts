@@ -140,25 +140,6 @@ function getWebviewContent(): string {
                     background: linear-gradient(135deg, #78ffd6, #a8ff78);
                     color: black;
                 }
-                .settings {
-                    display: none;
-                    flex-direction: row;
-                    gap: 15px;
-                    margin-top: 15px;
-                    align-items: center;
-                    border-top: 1px solid #444;
-                    padding-top: 15px;
-                }
-                .setting-group {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .setting-label {
-                    font-size: 14px;
-                    font-weight: bold;
-                    color: #ddd;
-                }
                 .custom-select {
                     padding: 8px 15px;
                     border-radius: 25px;
