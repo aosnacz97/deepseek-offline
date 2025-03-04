@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
 
-
 	const disposable = vscode.commands.registerCommand('deepseek-offline.start', () => {
 
 		const panel = vscode.window.createWebviewPanel(
@@ -23,6 +22,9 @@ export function activate(context: vscode.ExtensionContext) {
                 let responseText = '';
         
                 try {
+
+                    panel.webview.postMessage({ command: 'showLoader' });
+
                     const streamResponse = await ollama.chat({
                         model: selectedModel,
                         messages: [{ role: 'user', content: userPrompt }],
@@ -35,6 +37,8 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 } catch (err) {
                     panel.webview.postMessage({ command: 'chatResponse', text: `Error: ${String(err)}` });
+                } finally {
+                    panel.webview.postMessage({ command: 'hideLoader' });
                 }
             }
         });
@@ -85,6 +89,26 @@ function getWebviewContent(): string {
                     margin-top: 10px;
                     overflow-x: auto;
                     word-wrap: break-word;
+                }
+                .loader {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 50px;
+                    height: 50px;
+                    border: 4px solid transparent;
+                    border-top: 4px solid #a8ff78;
+                    border-right: 4px solid #78ffd6;
+                    border-bottom: 4px solid #a8ff78;
+                    border-left: 4px solid #78ffd6;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    display: none;
+                }
+                @keyframes spin {
+                    0% { transform: translate(-50%, -50%) rotate(0deg); }
+                    100% { transform: translate(-50%, -50%) rotate(360deg); }
                 }
                 pre {
                     background: #282c34;
@@ -161,7 +185,7 @@ function getWebviewContent(): string {
         <body>
             <h2>Sovereign GPT</h2>
 
-            <textarea id="prompt" placeholder="Ask something..."></textarea><br />
+            <textarea id="prompt" placeholder="Ask something..." rows="1"></textarea><br />
 
             <div class="button-container">
                 <select id="modelSelect" class="model-select">
@@ -172,13 +196,24 @@ function getWebviewContent(): string {
                 <button id="askBtn" class="styled-button">Ask</button>
             </div>
 
-            <div id="response"></div>
+            <div id="response">
+                <div id="loader" class="loader"></div>
+                <div id="responseContent"></div>
+            </div>
 
             <script>
                 const vscode = acquireVsCodeApi();
+                const promptTextarea = document.getElementById('prompt');
+                const responseContent = document.getElementById('responseContent');
+                const loader = document.getElementById('loader');
+
+                promptTextarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
 
                 document.getElementById('askBtn').addEventListener('click', () => {
-                    const text = document.getElementById('prompt').value;
+                    const text = promptTextarea.value;
                     const selectedModel = document.getElementById('modelSelect').value;
 
                     vscode.postMessage({
@@ -190,8 +225,13 @@ function getWebviewContent(): string {
 
                 window.addEventListener('message', event => {
                     const { command, text } = event.data;
-                    if (command === 'chatResponse') {
-                        document.getElementById('response').innerHTML = marked.parse(text);
+                    if (command === 'showLoader') {
+                        loader.style.display = 'block';
+                        responseContent.innerHTML = '';
+                    } else if (command === 'hideLoader') {
+                        loader.style.display = 'none';
+                    } else if (command === 'chatResponse') {
+                        responseContent.innerHTML = marked.parse(text);
                         document.querySelectorAll('pre code').forEach((block) => {
                             hljs.highlightElement(block);
                         });
